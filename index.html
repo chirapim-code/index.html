@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>เกมล่าสมบัติ - กิจกรรมเดินเรือตามทิศ</title>
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { margin: 0; background-color: #f0f9ff; color: #1e293b; display: flex; flex-direction: column; min-height: 100vh; }
+    header { background-color: #0c4a6e; color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+    header h1 { margin: 0; font-size: 1.4rem; color: #fde047; }
+    header p { margin: 4px 0 0; font-size: 0.85rem; color: #bae6fd; }
+    .btn { cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: 0.2s; }
+    .btn:active { transform: scale(0.96); }
+    .btn-reset { background: #0284c7; color: white; padding: 8px 16px; font-size: 0.9rem; }
+    .btn-reset:hover { background: #0369a1; }
+    
+    /* Setup Screen */
+    #setupScreen { flex: 1; display: flex; justify-content: center; align-items: center; padding: 20px; }
+    .card { background: white; border-radius: 16px; padding: 28px; max-width: 520px; width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    .card h2 { margin-top: 0; color: #0c4a6e; }
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; font-weight: bold; margin-bottom: 8px; }
+    .team-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .team-btn { padding: 10px; border: 2px solid #cbd5e1; background: #f8fafc; border-radius: 10px; font-weight: bold; cursor: pointer; }
+    .team-btn.active { border-color: #0284c7; background: #e0f2fe; color: #0369a1; }
+    .team-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+    .team-input-box { display: flex; align-items: center; gap: 8px; border: 2px solid #cbd5e1; padding: 6px 10px; border-radius: 8px; }
+    .team-input-box input { border: none; outline: none; width: 100%; font-weight: bold; }
+    .dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    select { width: 100%; padding: 10px; border-radius: 8px; border: 2px solid #cbd5e1; font-weight: bold; }
+    .rules { background: #fef3c7; border: 1px solid #f59e0b; padding: 14px; border-radius: 10px; font-size: 0.88rem; color: #78350f; margin-bottom: 20px; }
+    .rules ul { margin: 6px 0 0; padding-left: 20px; }
+    .btn-start { width: 100%; background: #f59e0b; color: #1e293b; padding: 14px; font-size: 1.1rem; border-radius: 10px; }
+    .btn-start:hover { background: #d97706; color: white; }
+
+    /* Game Screen */
+    #gameScreen { display: none; max-width: 1150px; width: 100%; margin: 0 auto; padding: 20px; gap: 20px; grid-template-columns: 350px 1fr; }
+    @media (max-width: 850px) { #gameScreen { grid-template-columns: 1fr; } }
+    .panel { background: white; border-radius: 14px; padding: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 16px; }
+    .turn-banner { border-left: 8px solid #ef4444; }
+    .turn-title { font-size: 0.8rem; color: #64748b; font-weight: bold; }
+    .turn-team { font-size: 1.4rem; font-weight: bold; margin: 4px 0; display: flex; justify-content: space-between; }
+    
+    /* Compass */
+    .step-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+    .step-btn { padding: 10px; border: 2px solid #cbd5e1; background: #f8fafc; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    .step-btn.active { background: #0284c7; color: white; border-color: #0284c7; }
+    .compass { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 240px; margin: 0 auto; align-items: center; text-align: center; }
+    .dir-btn { background: #e0f2fe; border: 2px solid #7dd3fc; color: #0c4a6e; padding: 12px 6px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+    .dir-btn:hover { background: #bae6fd; }
+    .compass-center { width: 56px; height: 56px; margin: 0 auto; border-radius: 50%; background: #fef3c7; border: 2px solid #fcd34d; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+    .status-box { margin-top: 16px; padding: 12px; border-radius: 8px; background: #f1f5f9; text-align: center; font-weight: bold; font-size: 0.9rem; min-height: 48px; display: flex; align-items: center; justify-content: center; }
+
+    /* Teams List */
+    .team-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border: 2px solid #e2e8f0; border-radius: 10px; margin-bottom: 8px; }
+    .team-item.eliminated { opacity: 0.5; background: #f1f5f9; text-decoration: line-through; }
+    .team-badge { width: 32px; height: 32px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 1rem; margin-right: 10px; }
+
+    /* Board */
+    .board-panel { background: white; border-radius: 14px; padding: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); display: flex; flex-direction: column; align-items: center; }
+    .board-header { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+    #board { display: grid; gap: 4px; width: 100%; max-width: 560px; aspect-ratio: 1 / 1; }
+    .cell-label { background: #e0f2fe; color: #0c4a6e; font-weight: bold; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 0.9rem; }
+    .cell-ocean { background: linear-gradient(135deg, #38bdf8, #0284c7); border-radius: 6px; position: relative; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 6px rgba(0,0,0,0.15); }
+    .cell-treasure { background: linear-gradient(135deg, #fde047, #f59e0b); border: 2px solid #b45309; }
+    .cell-exploded { background: #fecaca; border: 2px solid #ef4444; }
+    .coord-hint { position: absolute; top: 2px; left: 4px; font-size: 0.65rem; color: rgba(255,255,255,0.6); font-weight: bold; }
+    .ship-icon { width: 28px; height: 28px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; box-shadow: 0 2px 5px rgba(0,0,0,0.3); z-index: 5; }
+
+    /* Modal */
+    #modal { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.75); justify-content: center; align-items: center; padding: 20px; z-index: 50; }
+    .modal-box { background: white; padding: 30px; border-radius: 18px; max-width: 420px; width: 100%; text-align: center; border: 4px solid #f59e0b; }
+    .modal-summary { background: #f8fafc; padding: 12px; border-radius: 10px; margin: 16px 0; text-align: left; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <h1>🏴‍☠️ เกมล่าสมบัติ (Treasure Hunt)</h1>
+      <p>เดินเรือตามทิศทาง • เดินได้ครั้งละไม่เกิน ๓ ช่อง • โดนระเบิด ๓ ครั้งตกรอบ</p>
+    </div>
+    <button id="resetBtn" class="btn btn-reset" style="display:none;" onclick="goSetup()">⚙️ ตั้งค่าใหม่</button>
+  </header>
+
+  <!-- หน้าตั้งค่า -->
+  <div id="setupScreen">
+    <div class="card">
+      <h2>🧭 ตั้งค่าการแข่งขัน</h2>
+      <div class="form-group">
+        <label>เลือกจำนวนกลุ่ม:</label>
+        <div class="team-btns">
+          <button type="button" class="team-btn active" id="tBtn2" onclick="setTeamCount(2)">๒ กลุ่ม</button>
+          <button type="button" class="team-btn" id="tBtn3" onclick="setTeamCount(3)">๓ กลุ่ม</button>
+          <button type="button" class="team-btn" id="tBtn4" onclick="setTeamCount(4)">๔ กลุ่ม</button>
+        </div>
+      </div>
+
+      <div id="teamInputs" class="team-inputs"></div>
+
+      <div class="form-group row-2">
+        <div>
+          <label>ขนาดแผนที่:</label>
+          <select id="mapSize">
+            <option value="8" selected>๘ x ๘ ช่อง</option>
+            <option value="10">๑๐ x ๑๐ ช่อง</option>
+          </select>
+        </div>
+        <div>
+          <label>กับดักระเบิด:</label>
+          <select id="bombMode">
+            <option value="hidden" selected>ซ่อนระเบิด (ลุ้นระทึก)</option>
+            <option value="visible">แสดงระเบิด (เห็นชัด)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="rules">
+        <strong>📜 กติกาการเล่น:</strong>
+        <ul>
+          <li>ผลัดกันเลือกจำนวนช่อง (<strong>ไม่เกิน ๓ ช่อง</strong>) และกดทิศทางเดินเรือ</li>
+          <li>หากเดินผ่านหรือหยุดตรง <strong>ระเบิด (💣)</strong> เสียพลังชีวิต ๑ ดวง</li>
+          <li>โดนระเบิดครบ <strong>๓ ครั้ง</strong> ถูกตัดสิทธิ์ทันที</li>
+          <li>กลุ่มที่เดินเรือไปถึง <strong>หีบสมบัติ (📦)</strong> ก่อน ชนะเลิศ!</li>
+        </ul>
+      </div>
+
+      <button type="button" class="btn btn-start" onclick="startGame()">⛵ เริ่มออกเรือล่าสมบัติ!</button>
+    </div>
+  </div>
+
+  <!-- หน้าเล่นเกม -->
+  <div id="gameScreen">
+    <div>
+      <div class="panel turn-banner" id="turnBanner">
+        <div class="turn-title">ตาเดินเรือของ:</div>
+        <div class="turn-team">
+          <span id="curName">กลุ่มที่ ๑</span>
+          <span id="curHearts">❤️❤️❤️</span>
+        </div>
+        <div id="curPos" style="font-size:0.9rem; color:#475569; font-weight:bold;">พิกัด: ก-๑</div>
+      </div>
+
+      <div class="panel">
+        <div style="text-align:center; font-weight:bold; margin-bottom:10px; color:#0c4a6e;">๑. เลือกจำนวนช่อง (ไม่เกิน ๓)</div>
+        <div class="step-btns">
+          <button type="button" class="step-btn active" id="sBtn1" onclick="setSteps(1)">๑ ช่อง</button>
+          <button type="button" class="step-btn" id="sBtn2" onclick="setSteps(2)">๒ ช่อง</button>
+          <button type="button" class="step-btn" id="sBtn3" onclick="setSteps(3)">๓ ช่อง</button>
+        </div>
+
+        <div style="text-align:center; font-weight:bold; margin-bottom:10px; color:#0c4a6e;">๒. กดทิศทางเดินเรือ</div>
+        <div class="compass">
+          <div></div>
+          <button type="button" class="dir-btn" onclick="move('N')">⬆️<br>เหนือ</button>
+          <div></div>
+          <button type="button" class="dir-btn" onclick="move('W')">⬅️<br>ตะวันตก</button>
+          <div class="compass-center">🧭</div>
+          <button type="button" class="dir-btn" onclick="move('E')">➡️<br>ตะวันออก</button>
+          <div></div>
+          <button type="button" class="dir-btn" onclick="move('S')">⬇️<br>ใต้</button>
+          <div></div>
+        </div>
+
+        <div id="statusMsg" class="status-box">พร้อมออกเรือ! เลือกจำนวนช่องและทิศทาง</div>
+      </div>
+
+      <div class="panel">
+        <div style="font-weight:bold; margin-bottom:10px; color:#0c4a6e;">🚩 สถานะกองเรือ</div>
+        <div id="teamList"></div>
+      </div>
+    </div>
+
+    <div class="board-panel">
+      <div class="board-header">
+        <strong style="color:#0c4a6e; font-size:1.1rem;">🗺️ แผนที่น่านน้ำมหาสมบัติ</strong>
+        <span style="font-size:0.85rem; background:#f1f5f9; padding:5px 10px; border-radius:6px;">📦 สมบัติ | 💥 ระเบิดทำงานแล้ว</span>
+      </div>
+      <div id="board"></div>
+    </div>
+  </div>
+
+  <!-- หน้าต่างสรุปผล -->
+  <div id="modal">
+    <div class="modal-box">
+      <div id="mEmoji" style="font-size:3.5rem;">🏆</div>
+      <h2 id="mTitle" style="color:#0c4a6e; margin:10px 0 5px;">ยินดีด้วย!</h2>
+      <p id="mSub" style="color:#475569; font-weight:bold; margin:0;"></p>
+      <div id="mSummary" class="modal-summary"></div>
+      <div style="display:flex; gap:10px;">
+        <button type="button" class="btn btn-start" style="flex:1; padding:10px;" onclick="startGame()">🔄 เล่นอีกครั้ง</button>
+        <button type="button" class="btn" style="background:#cbd5e1; padding:10px 16px;" onclick="goSetup()">⚙️ ตั้งค่า</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const thaiNums = ['๐','๑','๒','๓','๔','๕','๖','๗','๘','๙','๑๐'];
+    const cols = ['ก','ข','ค','ง','จ','ฉ','ช','ซ','ฌ','ญ'];
+    const configs = [
+      { name: 'กลุ่มที่ ๑ (แดง)', color: '#ef4444', icon: '⛵' },
+      { name: 'กลุ่มที่ ๒ (เหลือง)', color: '#eab308', icon: '🚤' },
+      { name: 'กลุ่มที่ ๓ (เขียว)', color: '#22c55e', icon: '🛳️' },
+      { name: 'กลุ่มที่ ๔ (ม่วง)', color: '#a855f7', icon: '🛥️' }
+    ];
+
+    let teamCount = 2, size = 8, mode = 'hidden', teams = [], turn = 0, steps = 1;
+    let treasure = { r: 0, c: 0 }, bombs = [], busy = false, over = false;
+
+    function setTeamCount(n) {
+      teamCount = n;
+      [2,3,4].forEach(i => {
+        const btn = document.getElementById('tBtn'+i);
+        if(btn) btn.className = i === n ? 'team-btn active' : 'team-btn';
+      });
+      let html = '';
+      for(let i=0; i<n; i++) {
+        html += `<div class="team-input-box"><span class="dot" style="background:${configs[i].color}"></span><input id="tIn${i}" value="${configs[i].name}"></div>`;
+      }
+      const container = document.getElementById('teamInputs');
+      if(container) container.innerHTML = html;
+    }
+
+    function setSteps(s) {
+      if(busy || over) return;
+      steps = s;
+      [1,2,3].forEach(i => {
+        const btn = document.getElementById('sBtn'+i);
+        if(btn) btn.className = i === s ? 'step-btn active' : 'step-btn';
+      });
+    }
+
+    function startGame() {
+      const sizeEl = document.getElementById('mapSize');
+      const modeEl = document.getElementById('bombMode');
+      if(sizeEl) size = parseInt(sizeEl.value);
+      if(modeEl) mode = modeEl.value;
+
+      const starts = [{r:size-1, c:0}, {r:0, c:size-1}, {r:0, c:0}, {r:size-1, c:size-1}];
+      
+      teams = [];
+      for(let i=0; i<teamCount; i++) {
+        let inputEl = document.getElementById('tIn'+i);
+        let val = inputEl ? inputEl.value.trim() : configs[i].name;
+        teams.push({ id:i, name: val || configs[i].name, color: configs[i].color, icon: configs[i].icon, r: starts[i].r, c: starts[i].c, hit: 0, out: false });
+      }
+
+      let mid = Math.floor(size/2);
+      treasure = { r: mid - Math.floor(Math.random()*2), c: mid - Math.floor(Math.random()*2) };
+
+      let totalBombs = size === 8 ? (8 + teamCount*2) : (14 + teamCount*3);
+      bombs = [];
+      let tries = 0;
+      while(bombs.length < totalBombs && tries < 500) {
+        tries++;
+        let r = Math.floor(Math.random()*size), c = Math.floor(Math.random()*size);
+        let nearStart = starts.some(s => Math.abs(s.r-r) + Math.abs(s.c-c) <= 1);
+        if(!nearStart && !(r===treasure.r && c===treasure.c) && !bombs.some(b => b.r===r && b.c===c)) {
+          bombs.push({ r, c, boom: false });
+        }
+      }
+
+      turn = 0; steps = 1; busy = false; over = false;
+      const setupScr = document.getElementById('setupScreen');
+      const modalScr = document.getElementById('modal');
+      const gameScr = document.getElementById('gameScreen');
+      const resetBtn = document.getElementById('resetBtn');
+
+      if(setupScr) setupScr.style.display = 'none';
+      if(modalScr) modalScr.style.display = 'none';
+      if(gameScr) gameScr.style.display = 'grid';
+      if(resetBtn) resetBtn.style.display = 'block';
+
+      setSteps(1);
+      draw();
+      msg(`เริ่มเกม! ตาของ "${teams[0].name}" เลือกช่องและทิศทาง`, '#f1f5f9', '#1e293b');
+    }
+
+    function msg(text, bg, color) {
+      const box = document.getElementById('statusMsg');
+      if(!box) return;
+      box.textContent = text;
+      box.style.background = bg;
+      box.style.color = color;
+    }
+
+    async function move(dir) {
+      if(busy || over) return;
+      let t = teams[turn];
+      if(!t || t.out) return;
+
+      const dMap = { N:{dr:-1,dc:0,n:'เหนือ'}, S:{dr:1,dc:0,n:'ใต้'}, E:{dr:0,dc:1,n:'ตะวันออก'}, W:{dr:0,dc:-1,n:'ตะวันตก'} };
+      let d = dMap[dir];
+      let nr = t.r + d.dr * steps, nc = t.c + d.dc * steps;
+
+      if(nr < 0 || nr >= size || nc < 0 || nc >= size) {
+        msg(`⚠️ ออกนอกแผนที่! เดินไปทาง${d.n} ${thaiNums[steps]} ช่องไม่ได้`, '#fef3c7', '#92400e');
+        return;
+      }
+
+      busy = true;
+      let hitAny = false, win = false;
+
+      for(let i=1; i<=steps; i++) {
+        await new Promise(r => setTimeout(r, 300));
+        t.r += d.dr; t.c += d.dc;
+        draw();
+
+        if(t.r === treasure.r && t.c === treasure.c) { win = true; break; }
+
+        let b = bombs.find(x => x.r === t.r && x.c === t.c && !x.boom);
+        if(b) {
+          b.boom = true; t.hit++; hitAny = true;
+          draw();
+          if(t.hit >= 3) {
+            t.out = true;
+            msg(`💥 ตูม!! "${t.name}" โดนระเบิดครบ ๓ ครั้ง ตกรอบ!`, '#fee2e2', '#991b1b');
+            await new Promise(r => setTimeout(r, 1000));
+            break;
+          } else {
+            msg(`💥 ตูม! "${t.name}" เหยียบระเบิด! (${thaiNums[t.hit]}/๓)`, '#fee2e2', '#991b1b');
+            await new Promise(r => setTimeout(r, 700));
+          }
+        }
+      }
+
+      if(win) {
+        over = true; draw();
+        msg(`🏆 "${t.name}" ถึงหีบสมบัติแล้ว ชนะเลิศ!`, '#d1fae5', '#065f46');
+        setTimeout(() => endModal(t, true), 600);
+        return;
+      }
+
+      if(teams.every(x => x.out)) {
+        over = true; setTimeout(() => endModal(null, false), 500); return;
+      }
+
+      if(!hitAny && !t.out) {
+        msg(`⛵ "${t.name}" เดินไปทาง${d.n} ${thaiNums[steps]} ช่อง ปลอดภัย`, '#e0f2fe', '#075985');
+      }
+
+      let loop = 0;
+      do { turn = (turn + 1) % teams.length; loop++; } while(teams[turn].out && loop <= teams.length);
+      busy = false;
+      draw();
+    }
+
+    function draw() {
+      let cur = teams[turn];
+      if(!cur) return;
+      
+      const turnBanner = document.getElementById('turnBanner');
+      const curName = document.getElementById('curName');
+      const curHearts = document.getElementById('curHearts');
+      const curPos = document.getElementById('curPos');
+      const teamList = document.getElementById('teamList');
+
+      if(turnBanner) turnBanner.style.borderLeftColor = cur.color;
+      if(curName) curName.textContent = cur.name;
+      if(curHearts) curHearts.textContent = '❤️'.repeat(3-cur.hit) + '🖤'.repeat(cur.hit);
+      if(curPos) curPos.textContent = `พิกัด: ${cols[cur.c]}-${thaiNums[cur.r+1]}`;
+
+      if(teamList) {
+        teamList.innerHTML = teams.map((t, i) => `
+          <div class="team-item ${t.out ? 'eliminated' : ''}" style="border-color:${i===turn && !over ? t.color : '#e2e8f0'}">
+            <div style="display:flex; align-items:center;">
+              <div class="team-badge" style="background:${t.color}">${t.out ? '❌' : t.icon}</div>
+              <div>
+                <div style="font-weight:bold; font-size:0.9rem;">${t.name}</div>
+                <div style="font-size:0.75rem; color:#64748b;">${t.out ? 'ตกรอบแล้ว' : `พิกัด ${cols[t.c]}-${thaiNums[t.r+1]}`}</div>
+              </div>
+            </div>
+            <div style="text-align:right; font-size:0.85rem;">
+              <div>${'❤️'.repeat(3-t.hit) + '🖤'.repeat(t.hit)}</div>
+              <div style="font-size:0.7rem; color:#94a3b8;">ระเบิด ${thaiNums[t.hit]}/๓</div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      const board = document.getElementById('board');
+      if(!board) return;
+      board.style.gridTemplateColumns = `repeat(${size+1}, 1fr)`;
+      let html = `<div class="cell-label">ทิศ</div>`;
+      for(let c=0; c<size; c++) html += `<div class="cell-label">${cols[c]}</div>`;
+
+      for(let r=0; r<size; r++) {
+        html += `<div class="cell-label">${thaiNums[r+1]}</div>`;
+        for(let c=0; c<size; c++) {
+          let isT = (r===treasure.r && c===treasure.c);
+          let b = bombs.find(x => x.r===r && x.c===c);
+          let here = teams.filter(t => !t.out && t.r===r && t.c===c);
+          let cls = 'cell-ocean', content = '';
+
+          if(isT) { cls += ' cell-treasure'; content = '<span style="font-size:1.5rem;">📦</span>'; }
+          else if(b) {
+            if(b.boom) { cls += ' cell-exploded'; content = '<span style="font-size:1.3rem;">💥</span>'; }
+            else if(mode === 'visible' || over) { content = '<span style="font-size:1.1rem; opacity:0.8;">💣</span>'; }
+          }
+
+          if(here.length > 0) {
+            content = `<div style="display:flex; gap:2px; flex-wrap:wrap; justify-content:center;">` +
+              here.map(t => `<div class="ship-icon" style="background:${t.color}">${t.icon}</div>`).join('') + `</div>`;
+          }
+
+          html += `<div class="${cls}"><span class="coord-hint">${cols[c]}${thaiNums[r+1]}</span>${content}</div>`;
+        }
+      }
+      board.innerHTML = html;
+    }
+
+    function endModal(winner, hasWin) {
+      const mEmoji = document.getElementById('mEmoji');
+      const mTitle = document.getElementById('mTitle');
+      const mSub = document.getElementById('mSub');
+      const mSummary = document.getElementById('mSummary');
+      const modal = document.getElementById('modal');
+
+      if(mEmoji) mEmoji.textContent = hasWin ? '🏆' : '💥';
+      if(mTitle) mTitle.textContent = hasWin ? `${winner.name} ชนะเลิศ!` : 'จบการแข่งขัน!';
+      if(mSub) mSub.textContent = hasWin ? 'เดินเรือไปถึงหีบสมบัติเป็นกลุ่มแรก!' : 'ทุกกลุ่มโดนระเบิดครบ ๓ ครั้ง';
+      if(mSummary) {
+        mSummary.innerHTML = teams.map(t => `
+          <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid #e2e8f0;">
+            <strong>${t.name}</strong>
+            <span>${hasWin && winner.id===t.id ? '🏆 พบสมบัติ' : t.out ? '❌ ตกรอบ' : `ระเบิด ${thaiNums[t.hit]} ครั้ง`}</span>
+          </div>
+        `).join('');
+      }
+      if(modal) modal.style.display = 'flex';
+    }
+
+    function goSetup() {
+      const gameScr = document.getElementById('gameScreen');
+      const modalScr = document.getElementById('modal');
+      const resetBtn = document.getElementById('resetBtn');
+      const setupScr = document.getElementById('setupScreen');
+
+      if(gameScr) gameScr.style.display = 'none';
+      if(modalScr) modalScr.style.display = 'none';
+      if(resetBtn) resetBtn.style.display = 'none';
+      if(setupScr) setupScr.style.display = 'flex';
+    }
+
+    // โหลดค่าเริ่มต้น
+    setTeamCount(2);
+  </script>
+</body>
+</html>
